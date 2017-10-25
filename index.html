@@ -1,0 +1,113 @@
+<!--htmlhint tagname-lowercase: false, attr-lowercase: false, attr-value-double-quotes: false -->
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <title>X3DOM iframe</title>
+    <link rel="shortcut icon" href="https://cdn.glitch.com/f4ebe2c0-5304-4302-a51c-5a026b605cbc%2Ffavicon.ico?1500919760960" type="image/x-icon"/>
+    <link rel="icon" href="https://cdn.glitch.com/f4ebe2c0-5304-4302-a51c-5a026b605cbc%2Ffavicon.ico?1500919760960" type="image/x-icon"/>
+    <style>
+      x3d {
+        background: black
+      }
+      input:invalid {
+        border: 4px solid red;
+      }
+      input:valid {
+        border: 2px solid black;
+      }
+    </style>
+  </head>  
+<body>
+  <h1>Test X3DOM build in iframe</h1>
+   <p>
+     web3d examples:
+    <select id='testURLs' onchange='loadUrl(this.value)'>
+      <option value='http://x3dgraphics.com/examples/X3dForWebAuthors/Chapter09EventUtilitiesScripting/BooleanToggleX3dom.xhtml'>BooleanToggle</option>
+      <option value='http://x3dgraphics.com/examples/X3dForWebAuthors/Chapter01TechnicalOverview/HelloWorldX3dom.xhtml'>HelloWorld</option>
+      <option value='http://x3dgraphics.com/examples/X3dForWebAuthors/Chapter02GeometryPrimitives/GeometryPrimitiveNodesWhiteBackgroundX3dom.xhtml'>GeometryPrimitiveNodesWhiteBackground</option>
+    </select>
+   </p>
+   <p>
+    web3d example .xhtml url (copy and paste):
+    <input autocomplete='on' pattern='http.*X3dom.xhtml' type="url" id="testURL" size='120'
+           value="http://x3dgraphics.com/examples/X3dForWebAuthors/Chapter09EventUtilitiesScripting/BooleanToggleX3dom.xhtml"
+           onchange='loadUrl(this.value)'
+           />
+  </p>
+  <p>
+    build number on <a href='https://x3dom-builds.surge.sh'>x3dom-builds.surge.sh</a>
+    <select id='builds' onchange='setBuild(this.value)'>
+      <option value='latest'>latest</option>
+      <option value='build_0'>build 0</option>
+      <option value='build_1'>build 1</option>
+      <option value='build_2'>build 2</option>
+      <option value='build_3'>build 3</option>
+      <option value='build_4'>build 4</option>
+      <option value='build_5'>build 5</option>
+      <option value='build_6'>build 6</option>
+      <option value='build_7'>build 7</option>
+      <option value='build_8'>build 8</option>
+      <option value='build_0'>build 9</option>
+    </select>
+  </p>
+  <iframe width='100%' height='500px' >
+    no iframe? srcdoc can only be html encoded, not xhtml; src can be xhtml
+  </iframe>
+  
+</body>
+<script>
+//<![CDATA[
+  var testUrl = document.querySelector('#testURLs').value;
+  var x3dframe = document.querySelector('iframe');
+  var build = 'latest';
+
+  loadUrl(testUrl);
+  
+  function setBuild(b) {build = b; loadUrl(document.querySelector('#testURLs').value);}
+  function loadUrl(testUrl) {
+    //build = build || 'latest';
+    //run cors-anywhere proxy server here on glitch instead white listing glitch.com
+    var crmeUrl = 'https://cors.io/?';//'https://cors-anywhere.herokuapp.com/';//'https://crossorigin.me/';
+    //use xhr to get parsed Document responseXML ?
+    fetch(crmeUrl + testUrl,
+      { //method: 'GET',
+        //headers: 'myHeaders',
+        //mode: 'cors',
+        cache: 'default' }).
+    then(function(response) {
+      return response.text();
+    }).
+    then(function(myText) {
+      // parse with DomParser into document ?
+
+      var x3domUrl = 'http://www.x3dom.org/download/dev/x3dom-full.js"/>' ;
+      var latestUrl = 'https://x3dom-builds.surge.sh/' + build + '/x3dom-full.js"><' + '/script>' ;
+      var cssUrl = 'http://www.x3dom.org/download/dev/x3dom.css';
+      var latestCssUrl = 'https://x3dom-builds.surge.sh/' + build + '/x3dom.css' ;
+      //also replace url fields with full cors proxy paths and crossOrigin field for images
+      //first url; keys on url=' sequences
+      var urlRegex = /url='&quot;(.*?)&quot;/g ; //*? is smallest possible match
+      function urlReplacer (match, parens1, offset) {
+        
+        var pre = "crossOrigin='anonymous' url='&quot;" + crmeUrl;
+        
+        var sub = parens1 + "&quot;";
+        
+        return parens1.indexOf(":") >= 0 // probably http:
+          ? pre + sub
+          : pre + testUrl.substring(0, testUrl.lastIndexOf('/')+1) + sub ;
+        
+      }
+      //data uri with correct mime type, required
+      x3dframe.src = URL.createObjectURL(new Blob(
+        [myText.replace(x3domUrl,latestUrl)
+          .replace(cssUrl, latestCssUrl)
+          .replace(urlRegex, urlReplacer)],
+        { type : 'application/xhtml+xml' }
+      ));//'data:application/xhtml+xml;base64,' + window.btoa(myText.replace(x3domUrl,latestUrl).replace(cssUrl, latestCssUrl));
+    });
+  }
+//]]>
+</script>
+</html>
